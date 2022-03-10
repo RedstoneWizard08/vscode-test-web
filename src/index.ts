@@ -488,6 +488,7 @@ interface CommandLineOptions {
 	port?: string;
 	verbose?: boolean;
 	help?: boolean;
+	downloadOnly: boolean;
 }
 
 function showHelp() {
@@ -508,6 +509,7 @@ function showHelp() {
 	console.log(`  --open-devtools: If set, opens the dev tools. [Optional]`);
 	console.log(`  --verbose: If set, prints out more information when running the server. [Optional]`);
 	console.log(`  --printServerLog: If set, prints the server access log. [Optional]`);
+	console.log(`  --downloadOnly: If set, the server will not run, but the sources will be downloaded instead. [Optional]`);
 	console.log(`  folderPath. A local folder to open VS Code on. The folder content will be available as a virtual file system. [Optional]`);
 }
 
@@ -518,7 +520,7 @@ async function cliMain(): Promise<void> {
 
 	const options: minimist.Opts = {
 		string: ['extensionDevelopmentPath', 'extensionTestsPath', 'browser', 'browserType', 'quality', 'version', 'waitForDebugger', 'folder-uri', 'permission', 'extensionPath', 'extensionId', 'sourcesPath', 'host', 'port'],
-		boolean: ['open-devtools', 'headless', 'hideServerLog', 'printServerLog', 'help', 'verbose'],
+		boolean: ['open-devtools', 'headless', 'hideServerLog', 'printServerLog', 'help', 'verbose', 'downloadOnly'],
 		unknown: arg => {
 			if (arg.startsWith('-')) {
 				console.log(`Unknown argument ${arg}`);
@@ -548,6 +550,14 @@ async function cliMain(): Promise<void> {
 	const verbose = validateBooleanOrUndefined(args, 'verbose');
 	const port = validatePortNumber(args.port);
 	const host = validateStringOrUndefined(args, 'host');
+	const downloadOnly = validateBooleanOrUndefined(args, 'downloadOnly');
+
+	if(downloadOnly === true) {
+		console.log("Download only was set. Not starting the server.");
+		const build = await getBuild({ quality: quality, browserType: browserType });
+		console.log(`Downloaded to ${build.location}.`);
+		return;
+	}
 
 	const waitForDebugger = validatePortNumber(args.waitForDebugger);
 
